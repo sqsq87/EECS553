@@ -26,8 +26,10 @@ def data_read(name: str, directory="../datasets/"):
     elif name in ["insurance_modest", "insurance_severe"]:
         data = pd.read_csv(os.path.join(directory,
                                         "insurance.csv"), sep=',')
+
         y = data["charges"].to_numpy()
         data = data.drop(columns=['charges'])
+
         for column in ["sex", "smoker", "region"]:
             one_hot = pd.get_dummies(data[column])
             data = data.drop(column, axis=1)
