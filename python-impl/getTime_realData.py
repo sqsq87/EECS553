@@ -47,7 +47,7 @@ def getTime_realData(X, y, z, gamma, size_range,
                 else:
                     time[idx] = time_v
                 optval[idx] = optval_v
-                print(name, w_star)
+                # print(name, w_star)
 
             record[name + "_mean"][i] = np.log(np.mean(time))
             record[name + "_std"][i] = np.std(time)
