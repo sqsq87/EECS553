@@ -7,6 +7,12 @@ from scipy.sparse import csr_matrix
 
 
 def socp(X, y, z, gamma):
+    # Set solver options.
+    solvers.options["show_progress"] = False
+    solvers.options["abstol"] = 1e-6
+    solvers.options["reltol"] = 1e-5
+    solvers.options["feastol"] = 1e-6
+
     # timer for matrix operations
     timer_matrx = timer()
     m, n = X.shape
@@ -51,7 +57,7 @@ def socp(X, y, z, gamma):
     # Prepare for SOCP
     # linear inequality constraints
     G0 = -csr_matrix(([1.] + [-4.] + [-1.] * (n + 3) + [1.] * (n + 2),  # values
-                      ([0] + [n + 2] * (n + 4) + list(range(2, n + 4)),  # row index
+                      ([0] + [1] * (n + 4) + list(range(2, n + 4)),  # row index
                        [1] + list(range(n + 4)) + list(range(2, n + 4))  # col index
                        )), shape=(n + 4, n + 4))
     G0 = matrix(G0.T.toarray().tolist())
@@ -77,7 +83,7 @@ def socp(X, y, z, gamma):
     c_ = np.zeros(n + 4, dtype=np.double)
     c_[0] = -1.0
     c_ = matrix(c_.tolist())
-    sol = solvers.socp(c=c_, Gl=G0, hl=h0, Gq=Gk, hq=hk)
+    sol = solvers.socp(c=c_, Gl=G0, hl=h0, Gq=Gk, hq=hk, )
     timer_solve = timer() - timer_solve
 
     # recover the results

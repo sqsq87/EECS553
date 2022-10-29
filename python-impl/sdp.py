@@ -5,6 +5,14 @@ from scipy.sparse import csr_matrix
 
 
 def sdp(X, y, z, gamma):
+    # Set solvers options. This is for the purpose
+    # of more robust comparison with socp.
+    solvers.options["show_progress"] = False
+    solvers.options["abstol"] = 1e-6
+    solvers.options["reltol"] = 1e-5
+    solvers.options["feastol"] = 1e-6
+
+    # Set timer for the entire process.
     time1 = timer()
     m, n = X.shape
     X_tilde = np.hstack((X, np.ones((m, 1))))
