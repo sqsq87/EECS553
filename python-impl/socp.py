@@ -54,13 +54,10 @@ def socp(X, y, z, gamma):
                       ([0] + [n + 2] * (n + 4) + list(range(2, n + 4)),  # row index
                        [1] + list(range(n + 4)) + list(range(2, n + 4))  # col index
                        )), shape=(n + 4, n + 4))
-    G0 = matrix(G0.toarray().T.tolist())
-    print("G0", G0)
+    G0 = matrix(G0.T.toarray().tolist())
     h0 = np.concatenate((gamma * np.min(d, keepdims=True),
                          A22_bar[0], np.zeros(n + 2)), axis=0)
-    h0 = matrix(h0.squeeze().astype(np.double).tolist())
-
-    print(np.linalg.lstsq(G0, h0))
+    h0 = matrix(h0.tolist())
 
     # cone inequality constraints
     Gk, hk = [], []
@@ -73,31 +70,24 @@ def socp(X, y, z, gamma):
         assert Gk_.shape == (3, n + 4)
         assert b[j].shape == (1,)
         hk_ = np.array((0.5 * d[j], 0.5 * d[j], b[j][0]))
-        Gk.append(matrix(Gk_.astype(np.double).T.tolist()))
-        hk.append(matrix(hk_.squeeze().astype(np.double).tolist()))
+        Gk.append(matrix(Gk_.T.tolist()))
+        hk.append(matrix(hk_.tolist()))
 
     # objective coefficient
     c_ = np.zeros(n + 4, dtype=np.double)
     c_[0] = -1.0
     c_ = matrix(c_.tolist())
-
     sol = solvers.socp(c=c_, Gl=G0, hl=h0, Gq=Gk, hq=hk)
     timer_solve = timer() - timer_solve
-
-    print(hk[1])
-    print(Gk[1])
-    print(len(Gk), len(hk))
 
     # recover the results
     optval = -sol["primal objective"]
     mu = np.array(sol['x']).squeeze()[0]
     lambda_ = np.array(sol['x']).squeeze()[1]
-    print(sol)
     D = A - mu * B + lambda_ * C
     w_star = np.linalg.lstsq(D[:, :-1], -D[:, -1], rcond=None)[0]
-    print("sol", w_star)
-    w_star, alpha = np.array(w_star).squeeze()[:n + 1], np.array(w_star).squeeze()[n + 1]
-    # w_star = np.array(w_star).squeeze()[:n + 1]
+    w_star = np.array(w_star).squeeze()[:n + 1]
     # optval = np.linalg.norm((z * (w_star.T @ w_star) / gamma + X_tilde @ w_star) /
     #                         (1 + w_star.T @ w_star / gamma) - y) ** 2
+
     return w_star, optval, (timer_eig, timer_matrx + timer_eig + timer_solve)
