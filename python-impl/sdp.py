@@ -8,9 +8,9 @@ def sdp(X, y, z, gamma):
     # Set solvers options. This is for the purpose
     # of more robust comparison with socp.
     solvers.options["show_progress"] = False
-    solvers.options["abstol"] = 1e-6
-    solvers.options["reltol"] = 1e-5
-    solvers.options["feastol"] = 1e-6
+    solvers.options["abstol"] = 1e-12
+    solvers.options["reltol"] = 1e-12
+    solvers.options["feastol"] = 1e-12
 
     # Set timer for the entire process.
     time1 = timer()
@@ -38,7 +38,8 @@ def sdp(X, y, z, gamma):
 
     h = [matrix(A.tolist())]
     c = matrix([-1., 0.])  # minimization problem should use negative weight
-    sol = solvers.sdp(c, Gs=[matrix([B_flt.tolist()[0], C_flt.tolist()[0]])], hs=h)
+    sol = solvers.sdp(c, Gs=[matrix([B_flt.tolist()[0], C_flt.tolist()[0]])],
+                      hs=h, solver="mosek")
     time2 = timer()
 
     # retrieve the optimal values

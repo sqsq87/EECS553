@@ -25,7 +25,10 @@ def rtr(X, y, z, gamma):
 
     problem = pymanopt.Problem(manifold, cost)
 
-    optimizer = pymanopt.optimizers.trust_regions.TrustRegions(verbosity=0)
+    optimizer = pymanopt.optimizers.trust_regions.TrustRegions(max_time=1e6,
+                                                               max_iterations=1e10,
+                                                               min_step_size=1e-20,
+                                                               verbosity=0)
     result = optimizer.run(problem)
 
     # Reconstruct the results
