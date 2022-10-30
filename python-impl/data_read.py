@@ -48,8 +48,7 @@ def data_read(name: str, directory="../datasets/"):
         gamma_list = [1e-3]
         gamma_time = 0.5
         datasize_list = np.linspace(100, 1300, 25)
-        
-        
+
     elif name in ["house_modest", "house_severe"]:
         data = pd.read_csv(os.path.join(directory,
                                         "house.csv"), sep=',')
@@ -64,7 +63,6 @@ def data_read(name: str, directory="../datasets/"):
         else:
             z = y - 10
         z = np.clip(z, 0, None)
-      
 
         # Configuration parameters
         const = 0.1

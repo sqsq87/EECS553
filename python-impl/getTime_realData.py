@@ -56,4 +56,7 @@ def getTime_realData(X, y, z, gamma, size_range,
                 record["socp_eig_std"][i] = np.std(time_eig)
             record["optval_" + name][i] = np.mean(optval)
 
+    # Change index name for plotting
+    record = pd.DataFrame(record.to_numpy(), columns=record.columns,
+                          index=size_range)
     return record

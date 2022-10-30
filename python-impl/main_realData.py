@@ -12,14 +12,17 @@ RESULT_DIR = "../result/"
 METHOD = {"ssdp": True, "socp": True, "ltr": True, "rtr": True}
 
 # list of dataset name
-DATANAME_LIST = ["wine_modest", "wine_severe", "insurance_modest", "insurance_severe"]
+DATANAME_LIST = ["wine_modest", "wine_severe", "insurance_modest",
+                 "insurance_severe", "house_modest", "house_severe"]
+
+GAMMA_LIST = [1e-1]
 
 
 def main_realData(methods: dict = METHOD, dataname_list: list = DATANAME_LIST,
-                  result_dir: str = RESULT_DIR, norm: bool = True):
+                  gamma_list: list = GAMMA_LIST, result_dir: str = RESULT_DIR,
+                  norm: bool = True):
     # Configuration
     len_name = len(dataname_list)
-    gamma_list = [1e-1]
 
     for gamma in tqdm(gamma_list, desc="gamma (main)",
                       colour="green", leave=False, position=0):
