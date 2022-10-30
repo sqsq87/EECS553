@@ -51,7 +51,8 @@ def data_read(name: str, directory="../datasets/"):
         
         
     elif name in ["house_modest", "house_severe"]:
-        data = pd.read_csv('house.csv')
+        data = pd.read_csv(os.path.join(directory,
+                                        "house.csv"), sep=',')
         data.columns = ['No', 'transaction', 'house age', 'distance','stores','lat','log','prices']
         data = data[["house age", 'distance','stores','lat','log','prices']]
         y = data["prices"].to_numpy()
