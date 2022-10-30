@@ -48,6 +48,28 @@ def data_read(name: str, directory="../datasets/"):
         gamma_list = [1e-3]
         gamma_time = 0.5
         datasize_list = np.linspace(100, 1300, 25)
+        
+        
+    elif name in ["house_modest", "house_severe"]:
+        data = pd.read_csv('house.csv')
+        data.columns = ['No', 'transaction', 'house age', 'distance','stores','lat','log','prices']
+        data = data[["house age", 'distance','stores','lat','log','prices']]
+        y = data["prices"].to_numpy()
+        data = data.drop(columns=['prices'])
+
+        X = data.to_numpy()
+        if name.find("modest"):
+            z = y - 5
+        else:
+            z = y - 10
+        z = np.clip(z, 0, None)
+      
+
+        # Configuration parameters
+        const = 0.1
+        gamma_list = np.linspace(1e-3, 0.75, 40)
+        gamma_time = 0.5
+        datasize_list = np.linspace(100, 400, 10)
 
     elif name in ["building_modest", "building_severe",
                   "building_modest170", "building_severe170"]:
