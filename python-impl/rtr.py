@@ -25,7 +25,7 @@ def rtr(X, y, z, gamma):
 
     problem = pymanopt.Problem(manifold, cost)
 
-    optimizer = pymanopt.optimizers.trust_regions.TrustRegions()
+    optimizer = pymanopt.optimizers.trust_regions.TrustRegions(verbosity=0)
     result = optimizer.run(problem)
 
     # Reconstruct the results
@@ -40,4 +40,3 @@ def rtr(X, y, z, gamma):
     optval = r_star.T @ (h @ r_star) + 2 * g.T @ r_star + p
 
     return w, optval, result.time + recon_timer
-

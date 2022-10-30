@@ -1,27 +1,33 @@
-import numpy as np
-import pandas as pd
+import os
 from sklearn.preprocessing import normalize
+from tqdm import tqdm
 
 from data_read import data_read
 from getTime_realData import getTime_realData
 
+# directory to the result
+RESULT_DIR = "../result/"
 
-def main_realData(norm: bool = True):
+# method used
+METHOD = {"ssdp": True, "socp": True, "ltr": True, "rtr": True}
+
+# list of dataset name
+DATANAME_LIST = ["wine_modest", "wine_severe", "insurance_modest", "insurance_severe"]
+
+
+def main_realData(methods: dict = METHOD, dataname_list: list = DATANAME_LIST,
+                  result_dir: str = RESULT_DIR, norm: bool = True):
     # Configuration
-    methods = {"ssdp": True, "socp": True, "ltr": True, "rtr": True}
-    dataname_list = ["wine_modest", "wine_severe",
-                     "insurance_modest", "insurance_severe"]
     len_name = len(dataname_list)
     gamma_list = [1e-1]
 
-    for gamma_idx in range(len(gamma_list)):
-        gamma = gamma_list[gamma_idx]
-        ssdp_mr = np.zeros((len_name, 1))
-        ssdp_std = np.zeros((len_name, 1))
-        for idx in range(len_name):
+    for gamma in tqdm(gamma_list, desc="gamma (main)",
+                      colour="green", leave=False, position=0):
+        for idx in tqdm(range(len_name), desc="dataset (main)",
+                        colour="blue", leave=False, position=1):
             dataname = dataname_list[idx]
-            X, y, z, const, gamma_list, \
-                gamma_time, datasize_list = data_read(name=dataname)
+            X, y, z, const, gamma_list, gamma_time, \
+                datasize_list = data_read(name=dataname)
 
             if norm:
                 X = normalize(X, axis=1, norm='l1')
@@ -29,7 +35,8 @@ def main_realData(norm: bool = True):
             record = getTime_realData(X, y, z, gamma,
                                       datasize_list.astype(int),
                                       methods, 10)
-            table_name_cmp = '../result/' + str(dataname) + '_result.csv'
+            table_name_cmp = os.path.join(result_dir, dataname + '_' +
+                                          str(gamma) + "_result.csv")
             record.to_csv(table_name_cmp)
 
 

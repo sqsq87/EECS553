@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from sdp import sdp
 from socp import socp
@@ -26,12 +27,11 @@ def getTime_realData(X, y, z, gamma, size_range,
     method_names = ["ssdp", "socp", "ltr", "rtr"]
     method_iface = [sdp, socp, ltrsr, rtr]
     assert np.all(set(methods_bool.keys()) == set(method_names))
-    for i in range(num_size):
-        print('Starting a dataset with size of ' + str(i))
+    for i in tqdm(range(num_size), desc="data size (getTime)",
+                  colour="red", leave=False, position=2):
         for name, iface in zip(method_names, method_iface):
             if not methods_bool[name]:
                 continue
-            print("Doing method", name)
             time = np.zeros(fold)
             time_eig = np.zeros(fold)
             optval = np.zeros(fold)
