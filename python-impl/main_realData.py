@@ -13,7 +13,8 @@ METHOD = {"ssdp": True, "socp": True, "ltr": True, "rtr": True}
 
 # list of dataset name
 DATANAME_LIST = ["wine_modest", "wine_severe", "insurance_modest",
-                 "insurance_severe", "house_modest", "house_severe"]
+                 "insurance_severe", "house_modest", "house_severe",
+                 "building_modest", "building_severe"]
 
 GAMMA_LIST = [1e-1]
 
