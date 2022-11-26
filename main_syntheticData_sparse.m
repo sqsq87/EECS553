@@ -3,10 +3,13 @@ clear all
 clc
 
 % set m, n list, where m = multiple * n
-n_list = [10000,15000,20000,25000,30000]';
+n_list = [10000,15000,20000,25000,30000];
+% n_list = [10000];
 multiple_list = [0.5,1,2,3];
 gamma_list = [1e-1,1e-2];
-density_list = [0.0001, 0.001, 0.01]';
+% density_list = [0.0001, 0.001, 0.01]';
+density_list = [0.001, 0.01];
+
 % normalization or not
 normalize_yes = 0;
 % set synthetic data path
@@ -54,7 +57,9 @@ for gamma_idx = 1: length(gamma_list)
             ratio1 = (SOCPtime)./LTRtime;
             ratio2 = RTRtime./LTRtime;
             % sava result
-            result_table = table(m_list,n_list,SOCPtime,time_eig_list,LTRtime,RTRtime,ratio1,ratio2);      
+            m = reshape(m_list, 3, 1);
+            n = reshape(n_list, 3, 1);
+            result_table = table(m,n,SOCPtime,time_eig_list,LTRtime,RTRtime,ratio1,ratio2);      
             table_name =strcat('./result/synthetic_result/gamma',string(gamma),'/sparse',string(density),'_multiple',string(multiple),'.csv');
             writetable(result_table,table_name);
         end

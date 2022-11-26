@@ -23,9 +23,9 @@ def plot_result(result_dir: str = RESULT_DIR,
             result = pd.read_csv(path)
             data = result[[method + "_mean" for method in methods]]
             data = np.exp(data)
-            data.columns = methods
+            data.columns = ["SDP", "SOCP", "GLTR", "RTRNewton"]
             error = result[[method + "_std" for method in methods]]
-            error.columns = methods
+            error.columns = ["SDP", "SOCP", "GLTR", "RTRNewton"]
 
             # Create plot
             data.plot(yerr=error)

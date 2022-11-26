@@ -5,7 +5,7 @@ rng(2021);
 % nargin = length(varargin);
 
 [m,n] = size(X);
-ssdp_yes = 1; socp_yes = 1; LTR_yes = 1;RTR_yes = 1;
+ssdp_yes = 1; socp_yes = 1; LTR_yes = 1; RTR_yes = 1;
 LTR_yes2 = 1;RTR2_yes = 1;
 
 % flatten out
@@ -85,15 +85,21 @@ for i = 1:num_size
            
     end
     time_ssdp(i,1) = mean(log10(timessdp));time_socp(i,1) = mean(log10(timesocp));time_eig(i,1) = mean(log10(timeeig));
-    time_LTR(i,1) = mean(log10(timeLTR));time_LTR2(i,1) = mean(log10(timeLTR2));time_RTR(i,1) = mean(log10(timeRTR));time_RTR2(i,1) = mean(log10(timeRTR2));
+    time_LTR(i,1) = mean(log10(timeLTR));time_LTR2(i,1) = mean(log10(timeLTR2));
+    time_RTR(i,1) = mean(log10(timeRTR));time_RTR2(i,1) = mean(log10(timeRTR2));
     timestd_ssdp(i,1) = std(log10(timessdp));timestd_socp(i,1) = std(log10(timesocp));timestd_eig(i,1) = std(log10(timeeig));
-    timestd_LTR(i,1) = std(log10(timeLTR));timestd_LTR2(i,1) = std(log10(timeLTR2));timestd_RTR(i,1) = std(log10(timeRTR));timestd_RTR2(i,1) = std(log10(timeRTR2));
-    optval_ssdp(i,1) = mean(optvalssdp);optval_socp(i,1) = mean(optvalsocp);
-    optval_LTR(i,1) = mean(optvalLTR);optval_LTR2(i,1) = mean(optvalLTR2);optval_RTR(i,1) = mean(optvalRTR);optval_RTR2(i,1) = mean(optvalRTR2);    
+    timestd_LTR(i,1) = std(log10(timeLTR));timestd_LTR2(i,1) = std(log10(timeLTR2));
+    timestd_RTR(i,1) = std(log10(timeRTR));timestd_RTR2(i,1) = std(log10(timeRTR2));
+    optval_ssdp(i,1) = mean(optvalssdp);
+    optval_socp(i,1) = mean(optvalsocp);
+    optval_LTR(i,1) = mean(optvalLTR);optval_LTR2(i,1) = mean(optvalLTR2);
+    optval_RTR(i,1) = mean(optvalRTR);optval_RTR2(i,1) = mean(optvalRTR2);    
 end 
  
-Infossdp.fval = optval_ssdp;Infossdp.logtime = time_ssdp;Infossdp.logtimestd = timestd_ssdp;
-Infosocp.fval = optval_socp;Infosocp.logtime = time_socp;Infosocp.logtimestd = timestd_socp;Infosocp.logtimeeig = time_eig;Infosocp.logtimestdeig = timestd_eig;
+Infossdp.fval = optval_ssdp
+Infossdp.logtime = time_ssdp;Infossdp.logtimestd = timestd_ssdp;
+Infosocp.fval = optval_socp
+Infosocp.logtime = time_socp;Infosocp.logtimestd = timestd_socp;Infosocp.logtimeeig = time_eig;Infosocp.logtimestdeig = timestd_eig;
 InfoLTR.fval = optval_LTR;InfoLTR.logtime = time_LTR;InfoLTR.logtimestd = timestd_LTR;
 InfoLTR2.fval = optval_LTR2;InfoLTR2.logtime = time_LTR2;InfoLTR2.logtimestd = timestd_LTR2;
 InfoRTR.fval = optval_RTR;InfoRTR.logtime = time_RTR;InfoRTR.logtimestd = timestd_RTR;

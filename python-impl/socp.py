@@ -83,7 +83,7 @@ def socp(X, y, z, gamma):
     c_ = np.zeros(n + 4, dtype=np.double)
     c_[0] = -1.0
     c_ = matrix(c_.tolist())
-    sol = solvers.socp(c=c_, Gl=G0, hl=h0, Gq=Gk, hq=hk, solver="mosek")
+    sol = solvers.socp(c=c_, Gl=G0, hl=h0, Gq=Gk, hq=hk)
     timer_solve = timer() - timer_solve
 
     # recover the results

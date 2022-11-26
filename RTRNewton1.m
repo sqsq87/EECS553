@@ -39,21 +39,22 @@ ManiParams.IsCheckParams = 1;
 HasHHR = 0;
 
 % use the function handles
-temp0 = tic;
-[rhat, fv, gfv, gfgf0, iter, nf, ng, nR, nV, nVp, nH, ComTime, funs, grads, times, eigHess] = DriverOPT(fhandle, gfhandle, Hesshandle, [], SolverParams, ManiParams, HasHHR, rinitial);
-solvertime = toc(temp0););
+[rhat, fv, gfv, gfgf0, iter, nf, ng, nR, nV, nVp, nH, ComTime, ...
+    funs, grads, times, eigHess] = DriverOPT(fhandle, gfhandle, ...
+    Hesshandle, [], SolverParams, ManiParams, HasHHR, rinitial);
 
-fprintf('nf%d\tng%d\tnH:%d\t time%e\n',nf,ng,nH,ComTime);
+% fprintf('nf%d\tng%d\tnH:%d\t time%e\n',nf,ng,nH,ComTime);
+
+% should not take recovery steps
+time = toc(tstart);
 
 % process of recovery
 r = rhat.main(:);
-
 
 w_tilde = r(1:end-1); alpha_tilde = r(end);
 alpha = (1+alpha_tilde)/(1-alpha_tilde); 
 w = 0.5 * sqrt(gamma) * (alpha + 1) * w_tilde;
 
-time = toc(tstart);
 
 % calculate optimal function value
 optval = r' * A * r + 2 * b' * r + c;
