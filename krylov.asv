@@ -1,0 +1,284 @@
+function [s, lambda] = krylov(H, L, M, g, delta, tol, max_iter, method)
+% Interface for krylov subspace methods
+if method == "gltr"
+    [s, lambda] = gltr(H, L, M, g, delta, tol, max_iter);
+elseif method == "newton"
+    [s, lambda] = safeguard_Newton(H, g, delta, tol);
+elseif method == "lstrs"
+    if ~isempty(H)
+        [s, lambda] = lstrs(H, g, delta);
+    else
+        [s, lambda] = lstrs(@func_handle, g, delta);
+    end     
+end
+
+% nested function for quadratic term
+function [w] = func_handle(v, varargin)
+    w = 2*(L'*(L*v));
+end
+
+end
+
+function [s, lambda] = safeguard_Newton(H, g, delta, tol)
+%safeguard_Newton Compute the safeguarded Newton's Method to find the model
+%minimizer assuming eigendecoposition is relatively cheap.
+%The model problem is min_{s} q(s):=0.5*s'Hs + g's s.t. ||s||_2<=delta
+%Assume H is alwasy positive semidefinite
+
+% eigensolution:
+lambda = 0;
+[V, D] = eigs(H + lambda*eye(size(H, 1)));
+d = 1./diag(D);
+d(isinf(d)) = 0;
+D = diag(d);
+s = -V*(D*(V'*g));
+% Step 3
+norm_s = norm(s);
+if norm_s <= delta
+    if lambda == 0 || norm_s == delta
+        return;
+    end
+    nv = null(H);
+    if ~isempty(nv)
+        u1 = nv(1);
+        alpha1 = (-dot(s, u1) + sqrt(dot(s, u1)^2 - ...
+                   norm(u1)^2*(norm(s)^2-delta^2))) / norm(u1)^2;
+        alpha2 = (-dot(s, u1) - sqrt(dot(s, u1)^2 - ...
+                   norm(u1)^2*(norm(s)^2-delta^2))) / norm(u1)^2;
+        s1 = s + alpha1*u1;
+        s2 = s + alpha2*u1;
+        q1 = 0.5*dot(s1, H*s1) + dot(g, s1);
+        q2 = 0.5*dot(s2, H*s2) + dot(g, s2);
+        if q1 < q2
+            s = s1;
+        else 
+            s = s2;
+        end
+    end
+    return;
+end
+while true
+    % Step 4
+    if abs(norm(s) - delta) <= tol*delta
+        return;
+    end
+
+    % eigensolution method
+    w = sqrt(D)*(V'*s);
+    lambda = lambda + ((norm(s) - delta)/delta)*(norm(s)^2/norm(w)^2);
+    [V, D] = eigs(H + lambda*eye(size(H, 1)));
+    d = 1./diag(D);
+    d(isinf(d)) = 0;
+    D = diag(d);
+    s = -V*(D*(V'*g));
+end
+end  % end of function
+
+function [sk, lambda] = gltr(H, L, M, g, delta, tol, max_iter)
+%GLTR Compute the Generalized Lanczos Trust Region method
+%The model problem is min_{s} q(s):=0.5s'Hs + g's s.t. ||s||_2<=delta
+%Assume H is always positive semidefinite
+
+% the initialization
+if ~isempty(H)
+    n = size(H, 1);
+else
+    n = size(L, 2);
+end
+sk = zeros(n, 1);
+lambda = 0;
+gk = g;
+vk = M \ gk;
+gamma0 = sqrt(dot(vk, gk));
+pk = -vk;
+hk = zeros(n, 1);
+t_diag = zeros(1, n);
+t_offdiag = zeros(1, n);
+idx_list = linspace(1, n, n);
+
+INTERIOR = true;
+
+% history tracking for the indefinite case since we observe that if we
+% ever miss the opportunity to break with small "gammakp*abs(hk(k))" then 
+% it is unlikely to revert to that stage in future iterations.
+hkm = hk;
+lambdam = lambda;
+critical_value = realmax;
+REVERT = false;
+
+% launch the main loop
+alphakm = 0;  % the "minus" value, meaning the value from prev iteration
+betakm = 0;
+for k = 1:max_iter
+  if ~isempty(H)
+      alphak = dot(gk, vk) / dot(pk, H*pk);
+  else
+      lpk = L*pk;
+      alphak = dot(gk, vk) / dot(lpk, lpk);
+  end
+  if k == 1
+      t_diag(k) = 1/alphak;
+  else
+      t_diag(k) = 1/alphak + betakm / alphakm;
+      t_offdiag(k-1) = sqrt(betakm) / abs(alphakm);
+  end
+  if INTERIOR && (alphak <= 0 || ...
+          dot(sk + alphak*pk, M*(sk + alphak*pk)) >= delta^2)
+      INTERIOR = false;
+  end
+  if INTERIOR
+      sk = sk + alphak * pk;
+  else
+      gprime = zeros(k, 1);
+      gprime(1) = gamma0;
+      if k == 1
+          zbar = -gamma0/t_diag(1);
+          if abs(zbar) > delta
+              hk = sign(zbar)*delta;
+              lambda = (t_diag(1)*hk + gamma0)*(sign(-hk));
+          else
+              hk = zbar;
+              lambda = 0;
+          end
+          [hk, lambda] = trid_newton(sparse( ...
+              [idx_list(1:k), idx_list(2:k), idx_list(1:k-1)], ...
+              [idx_list(1:k), idx_list(1:k-1), idx_list(2:k)], ...
+              [t_diag(1:k), t_offdiag(1:k-1), t_offdiag(1:k-1)] ...
+              ), gamma0, 0, delta, tol);
+      elseif k < 1000
+%           gprime = zeros(k, 1);
+%           gprime(1) = gamma0;
+        [hk, lambda] = lstrs(sparse( ...
+              [idx_list(1:k), idx_list(2:k), idx_list(1:k-1)], ...
+              [idx_list(1:k), idx_list(1:k-1), idx_list(2:k)], ...
+              [t_diag(1:k), t_offdiag(1:k-1), t_offdiag(1:k-1)] ...
+              ), gprime, delta, @eig_gateway);
+      else
+        [hk, lambda] = lstrs(sparse( ...
+              [idx_list(1:k), idx_list(2:k), idx_list(1:k-1)], ...
+              [idx_list(1:k), idx_list(1:k-1), idx_list(2:k)], ...
+              [t_diag(1:k), t_offdiag(1:k-1), t_offdiag(1:k-1)] ...
+              ), gprime, delta);
+      end
+  end
+  g_temp = gk;
+  v_temp = vk;
+  if ~isempty(H)
+      gk = gk + alphak*(H*pk);
+  else
+      gk = gk + alphak*(L'*(L*pk));
+  end
+  vk = M \ gk;
+  betak = dot(gk, vk) / dot(g_temp, v_temp);
+  gammakp = sqrt(betakm) / abs(alphakm);
+  pk = -vk + betak*pk;
+
+  % test convergence
+  if INTERIOR
+      if sqrt(dot(gk, vk)) <= tol
+          break;
+      end
+  else
+      if gammakp*abs(hk(k)) <= tol
+          break;
+      elseif gammakp*abs(hk(k)) > critical_value  
+          % the critical value reverts, the previous iterate is the best
+          hk = hkm;
+          lambda = lambdam;
+          REVERT = true;
+          break;
+      end
+      hkm = hk;
+      lambdam = lambda;
+      critical_value = gammakp*abs(hk(k));
+  end
+
+  % update variables
+  alphakm = alphak;
+  betakm = betak;
+end
+
+% need to reconstruct if the iterates excceed the boundary
+if ~INTERIOR
+    if REVERT
+        k = k - 1;
+    end
+    % run Lanczos process to backup Qk
+    tj = g;
+    wjm = 0;
+    Q = zeros(n, k);
+    for j = 1:k
+        yj = M \ tj;
+        gammaj = sqrt(dot(tj, yj));
+        wj = tj / gammaj;
+        qj = yj / gammaj;
+        if ~isempty(H)
+            deltaj = dot(qj, H*qj);
+            tj = H*qj - deltaj*wj - gammaj*wjm;
+        else
+            lqj = L*qj;
+            deltaj = dot(lqj, lqj);
+            tj = L'*lqj - deltaj*wj - gammaj*wjm;
+        end
+        % store the prev-iterates
+        wjm = wj;
+        Q(:,j) = qj;
+    end
+    sk = Q*hk;
+end
+end % end of gltr
+
+% tridiagonal factorization into BDB', where B is upper-bidiagonal 
+% whose uppoer diagonal represented by vector b and D is diagonal 
+% represented by vector d
+function [b, d] = trid_factor(T)
+    % initialization
+    n_ = size(T, 1);
+    % handle trivial case
+    if n_ == 1
+        b = 1;
+        d = T;
+        return
+    end
+    b = zeros(n_, 1);
+    d = zeros(n_, 1);
+    d(end) = T(end, end);
+    for i = n_-1:-1:1
+        b(i) = T(i+1, i) / d(i+1);
+        d(i) = T(i, i) - b(i)^2*d(i+1);
+    end
+end % end of trid_factor
+
+% function for fast trust region subproblem with tridiagonal structure
+function [h, lambda] = trid_newton(T, gamma0, lambdak, delta, tol)
+    % intialization 
+    lambda = lambdak;
+    n_ = size(T, 1);
+    g_ = zeros(n_, 1);
+    [b, d] = trid_factor(T + lambda*eye(n_));
+    g_(1) = -gamma0/d(1);
+    B = eye(n_) + diag(b(1:end-1), 1);
+    h = B' \ g_;
+    if norm(h) > delta
+        w = B \ h;
+        lambda = lambda + (norm(h) - delta)/delta*norm(h)^2/dot(w, w./d);
+    else
+        lambda = 0;
+    end
+    % main loop
+    while true
+        % check for convergence
+        if abs(norm(h) - delta) <= tol*delta
+            return;
+        end
+
+        % factorize the tridiagonal matrix
+        [b, d] = trid_factor(T + lambda*eye(size(T, 1)));
+        g_(1) = -gamma0/d(1);
+        B = eye(n_) + diag(b(1:end-1), 1);
+        h = B' \ g_;
+        w = B \ h;
+        lambda = lambda + (norm(h) - delta)/delta *...
+            norm(h)^2/dot(w, w./d);
+    end
+end  % end of trid_newton

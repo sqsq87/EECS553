@@ -1,5 +1,3 @@
-function [] = generate_synthetic()
-
 n_list = [10000,15000, 20000, 25000, 30000, 35000, 40000]';
 density_list = [0.0001,0.001,0.01];
 multiple_list = [0.5,1,2,3];

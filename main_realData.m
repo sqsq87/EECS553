@@ -1,12 +1,16 @@
 % real data
-dataname_list = ["wine_modest", "wine_severe", "insurance_modest","insurance_severe","building_modest","building_severe","blog_modest","blog_severe"]';
+% dataname_list = ["wine_modest", "wine_severe", "insurance_modest", ...
+%     "insurance_severe","building_modest","building_severe", ...
+%     "blog_modest","blog_severe"];
+dataname_list = ["wine_modest","wine_severe"];
 len_name = length(dataname_list);
-gamma_list = [1e-1];
+gamma_list = 1e-1;
 % normalization or not
 normalize_yes = 1;
 % % add path
 % addpath('./Krylov method');
 % addpath('./ROPTLIB')
+
 
 for gamma_idx = 1: length(gamma_list)
     gamma = gamma_list(gamma_idx);
@@ -35,6 +39,18 @@ for gamma_idx = 1: length(gamma_list)
         res_table_cmp = table(datasize_list,ssdp_mr,ssdp_std,socp_mr,socp_std,socpeig_mr,socpeig_std,LTR_mr,LTR_std,RTR_mr,RTR_std); 
         table_name_cmp =strcat('./result/',string(dataname),'_time.csv');
         writetable(res_table_cmp,table_name_cmp);
+
+        % save optval table
+        if any(["wine_modest", "wine_severe", ...
+                "building_modest", "building_severe"] == string(dataname))
+            ltr_err = abs(socpOptval - LTROptval) ./ abs(socpOptval);
+            rtr_err = abs(socpOptval - RTROptval) ./ abs(socpOptval);
+            value_table = table(socpOptval, LTROptval, RTROptval, ...
+                ltr_err, rtr_err);
+            value_file_name = strcat('./result/', string(dataname), ...
+                '_value.csv');
+            writetable(value_table, value_file_name);
+        end
 
 
     end
