@@ -1,33 +1,59 @@
 import random
 import numpy as np
+import pandas as pd
+
 from sdp import sdp
+from socp import socp
+from ltrsr import ltrsr
+from rtr import rtr
 
 
-def getTime_realData(X, y, z, gamma, size_range):
-    fold = 10
+def getTime_realData(X, y, z, gamma, size_range,
+                     methods_bool: dict, fold: int = 10):
     num_size = len(size_range)
     random.seed(2021)
     (m, n) = X.shape
-    ssdp_yes = 1
-    time_ssdp = np.zeros(num_size)
-    time_ssdp_std = np.zeros(num_size)
-    optval_ssdp = np.zeros(num_size)
-    w_ssdp = np.zeros((n + 1, fold))
+
+    # Initialize experiment record, including time and optval
+    column_name = ["ssdp_mean", "ssdp_std", "socp_mean", "socp_std",
+                   "socp_eig_mean", "socp_eig_std", "ltr_mean",
+                   "ltr_std", "rtr_mean", "rtr_std", "optval_ssdp",
+                   "optval_socp", "optval_ltr", "optval_rtr"]
+    record = pd.DataFrame(np.zeros((num_size, len(column_name))),
+                          columns=column_name)
+
+    # Collect method names and their interface
+    method_names = ["ssdp", "socp", "ltr", "rtr"]
+    method_iface = [sdp, socp, ltrsr, rtr]
+    assert np.all(set(methods_bool.keys()) == set(method_names))
     for i in range(num_size):
-        print('Starting a dataset size of ' + str(i));
-        timessdp = np.zeros(fold)
-        optvalssdp = np.zeros(fold)
-        m_curr = size_range[i]
-        for idx in range(fold):
-            ridx = random.sample(range(m), m_curr)
-            if ssdp_yes:
-                print('Doing ssdp')
-                timessdp[idx] = sdp(X[ridx], y[ridx], z[ridx], gamma);
-        time_ssdp[i] = np.mean(timessdp)
-        time_ssdp_std[i] = np.std(timessdp)
-    return (time_ssdp, time_ssdp_std)
+        print('Starting a dataset with size of ' + str(i))
+        for name, iface in zip(method_names, method_iface):
+            if not methods_bool[name]:
+                continue
+            print("Doing method", name)
+            time = np.zeros(fold)
+            time_eig = np.zeros(fold)
+            optval = np.zeros(fold)
+            m_curr = size_range[i]
+            for idx in range(fold):
+                ridx = random.sample(range(m), int(m_curr))
+                w_star, optval_v, time_v = iface(X[ridx, :], y[ridx].reshape((-1, 1)),
+                                                 z[ridx].reshape((-1, 1)), gamma)
 
+                if name == "socp":
+                    time[idx] = time_v[1]
+                    time_eig[idx] = time_v[0]
+                else:
+                    time[idx] = time_v
+                optval[idx] = optval_v
+                # print(name, w_star)
 
+            record[name + "_mean"][i] = np.log(np.mean(time))
+            record[name + "_std"][i] = np.std(time)
+            if name == "socp":
+                record["socp_eig_mean"][i] = np.log(np.mean(time_eig))
+                record["socp_eig_std"][i] = np.std(time_eig)
+            record["optval_" + name][i] = np.mean(optval)
 
-
-
+    return record
