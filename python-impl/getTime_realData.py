@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+
 from sdp import sdp
 from socp import socp
 from ltrsr import ltrsr
@@ -32,6 +33,7 @@ def getTime_realData(X, y, z, gamma, size_range,
         for name, iface in zip(method_names, method_iface):
             if not methods_bool[name]:
                 continue
+
             time = np.zeros(fold)
             time_eig = np.zeros(fold)
             optval = np.zeros(fold)
@@ -59,4 +61,5 @@ def getTime_realData(X, y, z, gamma, size_range,
     # Change index name for plotting
     record = pd.DataFrame(record.to_numpy(), columns=record.columns,
                           index=size_range)
+
     return record

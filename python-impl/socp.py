@@ -62,6 +62,7 @@ def socp(X, y, z, gamma):
                        )), shape=(n + 4, n + 4))
     G0 = matrix(G0.T.toarray().tolist())
     h0 = np.concatenate((np.min(d, keepdims=True),
+
                          A22_bar[0], np.zeros(n + 2)), axis=0)
     h0 = matrix(h0.tolist())
 

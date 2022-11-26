@@ -9,6 +9,7 @@ from scipy.optimize._trlib import get_trlib_quadratic_subproblem
 # is of the form min q(r) = r'Hr + 2g'r with trust region
 # # radius delta = 1.
 def ltrsr(X, y, z, gamma, delta=1, tol_rel_i=1e-20, tol_rel_b=1e-20):
+
     m, n = X.shape
     x_tilde = np.hstack((0.5 * np.sqrt(gamma) * X, 0.5 * np.ones((m, 1))))
     l_hat = np.hstack((x_tilde, 0.5 * z))

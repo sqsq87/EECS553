@@ -13,6 +13,7 @@ def sdp(X, y, z, gamma):
     solvers.options["feastol"] = 1e-6
 
     # Set timer for the entire process.
+
     time1 = timer()
     m, n = X.shape
     X_tilde = np.hstack((X, np.ones((m, 1))))
@@ -40,6 +41,7 @@ def sdp(X, y, z, gamma):
     c = matrix([-1., 0.])  # minimization problem should use negative weight
     sol = solvers.sdp(c, Gs=[matrix([B_flt.tolist()[0], C_flt.tolist()[0]])],
                       hs=h)
+
     time2 = timer()
 
     # retrieve the optimal values
@@ -51,3 +53,4 @@ def sdp(X, y, z, gamma):
     w_star = np.array(w_star).squeeze()[:n+1]
 
     return w_star, optval, time2 - time1
+
